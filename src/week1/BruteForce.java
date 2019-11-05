@@ -1,37 +1,71 @@
 package week1;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class BruteForce {
-	static String data = "abcdefghijklmnopqrstuvwxyz";
+	static String data = "123456789abcdefghijklmnopqrstuvwxyz";
 	static boolean [] isChange;
 	static List<Integer> term = new ArrayList<>();
 	
-	static int [][] a = {{0, 1, 2, 3},
-						{2, 0, 4, 5},
-						{2, 3, 0, 6},
-						{4, 5, 3, 0}};
-	static List<Integer> p = new ArrayList<>();
+	static int [][] a;
+	static int[] p;
 	static int ans = Integer.MAX_VALUE;
-	static boolean [] used = new boolean[a.length];
+	static int[] minWay;
+	static boolean [] used;
+	static int countTask1=0;
+	static int countTask2=0;
+	static int countTask3=0;
+	static int countBracket=0;
+	static int countStartAndPoint=0;
 
-	public static void main(String[] args) {
-		int numberChar=3;
-		int lengthWord=3;
+	public static void main(String[] args) throws IOException {
+		int numberChar=4;
+		int lengthWord=10;
 		isChange = new boolean [lengthWord];
-	//	recBruteForce(0,numberChar, new char [lengthWord]);
+		recBruteForce(0,numberChar, new char [lengthWord]);
 		System.out.println();
-	//	recBruteForceTransposition(0, new char [lengthWord]);
+		recBruteForceTransposition(0, new char [lengthWord]);
 		bracket(0, 0, new char[2*lengthWord], 0);
-		numberToTerm(0, 0, 1, 5);// idx sum last target
-		taskKomivoyger(0);
-		System.out.println(ans);
+		numberToTerm(0, 0, 1, 35);// idx sum last target
+
+		
+        File file = new File("inputTaskKomi.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        int size = Integer.parseInt(br.readLine()); 
+        a=new int [size][size];
+        String str="";
+        int j=0;
+        while((str=br.readLine())!=null) {
+        	String [] number =  str.split(" ");
+        	for(int i=0; i<number.length; i++) {
+        		a[j][i] = Integer.parseInt(number[i]);
+        	}
+        	j++;
+        }
+        br.close();
+        
+		p = new int [size];
+//		minWay = new int [size];
+		used = new boolean[size];        
+		taskKomivoyger(1, 0);
+		System.out.println("Way: " +Arrays.toString(minWay) + " Length way " +ans);
+		
+		int numStar=8;
+		int maxLength=25;
+		recGenerateStringStartAndPoint("", numStar, maxLength);
 	}
 	
 	private static void recBruteForce(int idx, int size, char[] word) {
 		if(idx==word.length) {
-			System.out.println(word);
+			++countTask1;
+			if(countTask1==6659)
+				System.out.println(word);
 			return;
 		}
 		for(int i=0; i<size; i++){
@@ -42,7 +76,8 @@ public class BruteForce {
 	
 	private static void recBruteForceTransposition(int idx, char[] word) {
 		if(idx==word.length) {
-			System.out.println(word);
+			if(++countTask2==4468)
+				System.out.println(word);
 			return;
 		}
 		for(int i=0; i<word.length; i++){
@@ -57,7 +92,9 @@ public class BruteForce {
 	
 	private static void bracket(int leftBrackets, int rightBrackets, char [] brackets, int idx) {
 		if(idx==brackets.length) {
-			System.out.println(brackets);
+			countBracket++;
+			if(countBracket==8644)
+				System.out.println(brackets);
 			return;
 		}
 		if(leftBrackets<brackets.length/2) {
@@ -72,7 +109,8 @@ public class BruteForce {
 	
 	private static void numberToTerm(int idx, int sum, int last, int target) {
 		if(sum==target) {
-			System.out.println(term);
+			if(++countTask3==13672)
+				System.out.println(term);
 			return;
 		}
 		for(int i=last; i<=target-sum; i++) {
@@ -82,31 +120,51 @@ public class BruteForce {
 		}
 	}
 	
-	private static void taskKomivoyger(int idx) {
-		if(a.length==idx) {
-			ans=Math.min(ans, count());
-			System.out.println(p + " ans " + ans);
+	private static void taskKomivoyger(int idx, int len) {
+		if(len>=ans)
+			return;
+		if(idx==a.length) {
+			if(ans>len+a[p[idx-1]][0]) {
+				ans=len+a[p[idx-1]][0];
+				minWay=Arrays.copyOf(p, p.length);
+			}
 			return;
 		}
-		for(int i=0; i<a.length; i++) {
-			if(i==idx)
-				continue;
+		for(int i=1; i<a.length; i++) {
 			if(used[i])
 				continue;
-			p.add(i);
+			p[idx]=i;
 			used[i]=true;
-			taskKomivoyger(idx+1);
+			taskKomivoyger(idx+1, len+a[p[idx-1]][i]);
 			used[i]=false;
-			p.remove(idx);
-			
 		}
 	}
 	
 	private static int count() {
 		int sum=0;
-		for(int i=0; i<p.size(); i++) {
-			sum+=a[i][p.get(i)];
+		int count=0;
+		int i=0;
+		while(count<p.length) {
+			sum+=a[i][p[count]];
+			i=p[count++];
 		}
 		return sum;
+	}
+	
+	private static void recGenerateStringStartAndPoint(String current, int numStar, int maxLength) {
+		if(current.length()==maxLength && numStar==0) {
+			if(++countStartAndPoint==24008)
+				System.out.println(current);
+			return;
+		}
+		if((maxLength-current.length())%2==0 && numStar>(maxLength-current.length())/2)
+			return;
+		if((maxLength-current.length())%2==1 && numStar>(maxLength-current.length())/2+1)
+			return;
+		
+		if(numStar>0 && (current.isEmpty() || current.charAt(current.length()-1)=='.')) {
+			recGenerateStringStartAndPoint(current+"*", numStar-1, maxLength);			
+		}
+		recGenerateStringStartAndPoint(current+".", numStar, maxLength);
 	}
 }

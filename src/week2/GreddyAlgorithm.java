@@ -2,11 +2,12 @@ package week2;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +34,28 @@ public class GreddyAlgorithm {
 		Arrays.sort(tt);
 		timetable(tt, tmax);
 		// задача о расписании на олимпиаде
+        br = new BufferedReader(new FileReader(new File("inputOlimp.txt")));
+	    String [] olimp = br.readLine().split(" ");
+	    int numTask = Integer.parseInt(olimp[0]);
+        tmax = Integer.parseInt(olimp[1]); 
+	    olimp = br.readLine().split(" ");
+        int [] durationTask = new int [numTask];
+        for(int i=0; i<numTask; i++) {
+        	durationTask[i] = Integer.parseInt(olimp[i]);
+        }
+	    br.close();
+			
+		Arrays.sort(durationTask);
+		timeOlimp(durationTask, tmax);
 		
+		//задача о производителях мороженного
+		br = new BufferedReader(new FileReader(new File("inputIceCream.txt")));
+		int numIce = Integer.parseInt(br.readLine());
+		String [] iceCream = new String [numIce];
+        for(int i=0; i<numIce; i++) {
+        	iceCream[i] = br.readLine();
+        }
+        numManufacturerIceCream(iceCream);
 		
 		// задача о выборе заявок
 		BufferedReader brReq = new BufferedReader(new FileReader(new File("inputChoiceRequest.txt")));
@@ -50,6 +72,7 @@ public class GreddyAlgorithm {
 		choiceRequest(reqAudit);
 		
 		// задача о выборе заявок с бесконечным числом аудиторий
+		Collections.sort(reqList);
 		choiceRequestUnLimit(reqList);
 		
 		// задача о непрерывном рюкзаке
@@ -66,11 +89,39 @@ public class GreddyAlgorithm {
 		}
 		br.close();
 		Arrays.sort(things);
-//		System.out.println(Arrays.toString(things));
 		backpack(things, maxWeight);
 
 	}
 	
+	private static void numManufacturerIceCream(String[] iceCream) {
+		Set<String> currentManufacturer = new HashSet<>();
+		int count=1;
+		for(int i=0; i<iceCream.length; i++) {
+			if(currentManufacturer.contains(iceCream[i])){
+				count++;
+				currentManufacturer = new HashSet<>();
+			}
+			currentManufacturer.add(iceCream[i]);
+		}
+		System.out.println("Manufacturer IceCream "+count);
+	}
+
+	private static void timeOlimp(int[] durationTask, int tmax) {
+		int count=0;
+		long penaltyTime=0;
+		int duration=0;
+		for(int i=0; i<durationTask.length; i++) {
+			if(duration+durationTask[i]<=tmax) {
+				count++;
+				penaltyTime+=duration+durationTask[i];
+				duration+=durationTask[i];
+			}else {
+				break;
+			}
+		}
+		System.out.println("penalty time " + penaltyTime + " numTask " + count);
+	}
+
 	private static void coinCost(int [] coin, int cost) {
 		int numCoin=0;
 //		Arrays.sort(coin, );
@@ -78,7 +129,7 @@ public class GreddyAlgorithm {
 			numCoin+=cost/coin[i];
 			cost%=coin[i];
 		}
-		System.out.println(numCoin);
+		System.out.println("Num coin " +numCoin);
 	}
 	
 	private static void timetable(TimeTable [] costOrderAndDeadline, int tmax) {
@@ -97,7 +148,6 @@ public class GreddyAlgorithm {
 		
 		System.out.println("task timetable");
 		System.out.println(sum);
-		System.out.println(Arrays.toString(used));
 	}
 	
 	private static void choiceRequest(RequestAudience [] request) {
@@ -119,26 +169,28 @@ public class GreddyAlgorithm {
 	
 	private static void choiceRequestUnLimit(List<RequestAudience> request) {
 		List<RequestAudience> choice;
+		System.out.println("task choice requestUnLimit");
+		System.out.println(request);
 		int numAud=0;
 		while(!request.isEmpty()) {
 			numAud++;
 			choice = new ArrayList<>();
 			choice.add(request.get(0));
-			int cnt=1;
 			int last = 0;
 				
 			for(int i=1; i< request.size(); i++) {
 				if(request.get(i).start>=request.get(last).end) {
-					cnt++;
 					last=i;
 					choice.add(request.get(last));
 				}
 			}
+			
+			System.out.println("№ аудитории " + numAud);
+			System.out.println(choice);
 			for(RequestAudience ra : choice) {
 				request.remove(ra);
 			}			
 		}
-		System.out.println("task choice requestUnLimit");
 		System.out.println(numAud);
 	}
 	
@@ -186,7 +238,7 @@ class RequestAudience implements Comparable<RequestAudience>{
 
 	@Override
 	public int compareTo(RequestAudience o) {
-		return Integer.compare(this.end,o.end);
+		return Integer.compare(this.end, o.end);
 	}
 
 	@Override

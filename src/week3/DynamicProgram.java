@@ -9,9 +9,12 @@ import java.util.Arrays;
 public class DynamicProgram {
 
 	public static void main(String[] args) throws IOException {
-		twoFoots(10);
+		System.out.println("Доминошки");
+		twoFoots(42, 100);
+		twoFoots(100000, 1000000000);
+		System.out.println("Триминошки");
 		threeFoots(10);
-
+		System.out.println("Задача про жучка");
         BufferedReader br = new BufferedReader(new FileReader(new File("inputWeek3/inputBugWay.txt")));
         String s;
         s=br.readLine();
@@ -28,8 +31,8 @@ public class DynamicProgram {
         }
         br.close();
         movingBug(field);
-        // подсуммы матрицы
-        System.out.println("\nПодсуммы матрицы");
+        // подсуммы прямоугольников матрицы
+        System.out.println("\nПодсуммы в прямоугольниках матрицы");
         br = new BufferedReader(new FileReader(new File("inputWeek3/inputMatrixParthSum.txt")));
         s=br.readLine();
         str = s.split(" "); 
@@ -67,10 +70,109 @@ public class DynamicProgram {
         }
         changePriceToCoins(price, coins);
         br.close();
-
+        
+        // Наибольшая общая подпоследовательность
+        System.out.println("\nНаибольшая общая подпоследовательность");
+        br = new BufferedReader(new FileReader(new File("inputWeek3/inputSequence.txt")));
+        str = br.readLine().split(" ");
+        int [] seq1 = new int [str.length];
+        for(int i=0; i<str.length;i++) {
+        	seq1[i]=Integer.parseInt(str[i]);
+        }
+        str = br.readLine().split(" ");
+        int [] seq2 = new int [str.length];
+        for(int i=0; i<str.length;i++) {
+        	seq2[i]=Integer.parseInt(str[i]);
+        }
+        findMaxJointSequence(seq1, seq2);
+        br.close();
+        
+        // Наибольшая возрастающая подпоследовательность
+        System.out.println("\nНаибольшая возрастающая подпоследовательность");
+        br = new BufferedReader(new FileReader(new File("inputWeek3/inputUpSequence.txt")));
+        int size =10;
+        Integer.parseInt(br.readLine());
+        str = br.readLine().split(" ");
+        int [] seqUp = new int [size];
+        for(int i=0; i<size;i++) {
+        	seqUp[i]=Integer.parseInt(str[i]);
+        }       
+        System.out.println(Arrays.toString(seqUp));
+        
+        findMaxUpSequence(seqUp);
+        br.close();
 	}
+	// Наибольшая возрастающая подпоследовательность
+	private static void findMaxUpSequence(int[] seq) {
+		int [] d = new int [seq.length];
+		int [] lengthSeq= new int[seq.length];
+		int maxLength = d[0];
+		lengthSeq[0]=1;
+		for(int i=0; i<seq.length;i++) {
+			d[i]=1;;
+			//lengthSeq[i]=1;
+			for(int j=0; j<i; j++) {
+				if(seq[i]>seq[j]) {
+					if(d[j]+1>d[i]) {
+						d[i]=d[j]+1;
+//						lengthSeq[i]+=1;
+					}
+				}
+				if(d[i]==d[j]+1) {
+					lengthSeq[i]+=lengthSeq[j];
+				}else {
+					lengthSeq[i]=1;
+				}
+				
+			}
+			if(d[i]>maxLength) {
+				maxLength=d[i];
+			}
+			
+		}
+		int numMaxSize=0;
+	/*	for(int i=0; i<seq.length;i++) {
+			if(d[i]==maxLength)
+				numMaxSize+=lengthSeq[i];
+		}//*/
+		System.out.println("Длина возрастающей подпоследовательности\n"+ maxLength);
+		System.out.println("Количество " + numMaxSize);
+	}
+	// определение наибольшей общей подпоследовательности
+	private static void findMaxJointSequence(int[] seq1, int[] seq2) {
+		int [][] solve = new int [seq1.length+1][seq2.length+1];
+		int [][] cert = new int [seq1.length+1][seq2.length+1];
+		for(int i=1;i<=seq1.length;++i) {
+			for(int j=1;j<=seq2.length;++j) {
+				solve[i][j]=Math.max(solve[i-1][j], solve[i][j-1]);
+				if(seq1[i-1]==seq2[j-1]) {
+					solve[i][j]=Math.max(solve[i][j], solve[i-1][j-1]+1);
+					cert[i][j]=seq1[i-1];
+				}
+			}
+		}
+		System.out.println(solve[seq1.length][seq2.length]);
+		recPrintCertSequence(solve, cert, seq1.length, seq2.length);
+	}
+	private static void recPrintCertSequence(int[][] solve, int[][] cert, int indSeq1, int indSeq2) {
+		if(indSeq1==0 && indSeq2==0)
+			return;
+		if(solve[indSeq1][indSeq2]==solve[indSeq1-1][indSeq2]) {
+			recPrintCertSequence(solve, cert, indSeq1-1, indSeq2);
+		}else if(solve[indSeq1][indSeq2]==solve[indSeq1][indSeq2-1]){
+			recPrintCertSequence(solve, cert, indSeq1, indSeq2-1);
+		}else {
+			recPrintCertSequence(solve, cert, indSeq1-1, indSeq2-1);
+			System.out.print(cert[indSeq1][indSeq2]);
+			if(indSeq1!=cert.length-1 && indSeq2!=cert[0].length-1) {
+				System.out.print(", ");
+			}
+		}		
+	}
+	
+	// размен суммы минимальным количеством монет
 	private static void changePriceToCoins(int price, int[] coins) {
-		int [] res = new int [price+1];
+		int [] res = new int [price+1];// размен суммы минимальным количеством монет;
 		int [] p = new int [price+1];
 		for (int i=1; i<=price; i++) {
 			res[i]=Integer.MAX_VALUE;
@@ -111,14 +213,19 @@ public class DynamicProgram {
 		System.out.println(answer);
 	}
 	//способы раскладки доминошек по полю 2 х n 
-	private static void twoFoots(int n) {
+	private static void twoFoots(int n, int m) {
 		int[] solve = new int [n+1];
 		solve[0]=solve[1]=1;
+		int[] solveFull = new int [n+1];
+		solveFull[0]=solveFull[1]=1;
+		
 		for(int i=2; i<n+1;i++) {
-			solve[i]=solve[i-1]+solve[i-2];
+			solve[i]=(solve[i-1]+solve[i-2])%m;
+			solveFull[i]=solveFull[i-1]+solveFull[i-2];
 		}
-		System.out.println(Arrays.toString(solve));
-		System.out.println(solve[n]);
+//		System.out.println(Arrays.toString(solve));
+		System.out.println("full " + solveFull[n]);
+		System.out.println("solve%m=" + solve[n]);
 	}	
 	//способы раскладки триминошек по полю 3 х n 
 	private static void threeFoots(int n) {
@@ -129,7 +236,7 @@ public class DynamicProgram {
 		for(int i=4; i<n+1;i++) {
 			solve[i]=solve[i-1]+solve[i-3];
 		}
-		System.out.println(Arrays.toString(solve));
+//		System.out.println(Arrays.toString(solve));
 		System.out.println(solve[n]);
 	}
 	// перемещение жучка по полю с максимальной суммой
@@ -168,7 +275,4 @@ public class DynamicProgram {
 			System.out.print('R');
 		}
 	}
-	
-	
-
 }

@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class BackPackDP {
-
+	static int count=0;
 	public static void main(String[] args) throws IOException {
 		 BufferedReader br = new BufferedReader(new FileReader(new File("inputWeek3/inputBackPack.txt")));
 			String [] data = br.readLine().split(" ");
@@ -18,6 +18,7 @@ public class BackPackDP {
 				things[i] = new Thing(Integer.parseInt(data[1]), Integer.parseInt(data[0]));
 			}
 			solveBackpack(maxWeight, things);
+			System.out.println("\n"+count);
 	        br.close();
 
 	}
@@ -45,7 +46,9 @@ public class BackPackDP {
 			printCert(things, a, i-1, j);
 		else{
 			printCert(things, a, i-1, j-things[i-1].weight);
-			System.out.println(things[i-1]);
+		//	System.out.println(things[i-1]);
+			System.out.print(i+" ");
+			count++;
 		}
 		
 	}

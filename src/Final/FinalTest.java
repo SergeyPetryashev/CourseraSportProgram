@@ -3,9 +3,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class FinalTest {
 	static int count=0; 
@@ -43,14 +41,38 @@ public class FinalTest {
         System.out.println("The stones");
         br = new BufferedReader(new FileReader(new File("inputStones.txt")));
         int numStone = Integer.parseInt(br.readLine()); 
-        int [] stones=new int [numStone];
+        long [] stones=new long [numStone];
         str = br.readLine().split(" ");
+        long sumWeigthStone=0;
+        long min=Long.MAX_VALUE;
         for(int i=0; i<numStone; i++) {
-        	stones[i] = Integer.parseInt(str[i]);
+        	stones[i] = Long.parseLong(str[i]);
+        	//stones[i] = Integer.parseInt(str[i]);
+        	if(min>stones[i])
+        		min=stones[i];
+        	sumWeigthStone+=stones[i];
         }        
         br.close();
-        solveStones(stones);	// решение не оптимально
+        System.out.println("Честный дележ");
+
+   /*     long oneGold=solveHeapGold(stones, (int)(sumWeigthStone/2));
+        long twoGold=sumWeigthStone-oneGold;
+        System.out.println("Вторая кучка " + twoGold);
+        System.out.println("Разность "+ Math.abs(twoGold-oneGold));//*/
+
+        System.out.println("Перебор");
+        bitBruteForce(stones, sumWeigthStone);
         
+        System.out.println("Нечестный дележ");
+        Arrays.sort(stones);
+        long s1=0;
+        long s2=0;
+        for(int i=0; i<stones.length/2; i++) {
+        	s1+=stones[i];
+        	s2+=stones[stones.length/2+i];        	
+        }
+        System.out.println("Разность "+ Math.abs(s1-s2));
+
         // Тайм менеджмент
         System.out.println("The time");
         br = new BufferedReader(new FileReader(new File("inputTime.txt")));
@@ -69,38 +91,80 @@ public class FinalTest {
 	private static void solveTimeTable(TimeTable[] works) {
 		int [] count = new int [works.length];
 		int [][] time = new int [works.length+1][works.length+1];
-		for(int i=0; i<works.length;i++) {
-			for(int j=i+1; j<works.length; j++) {
-				time[i][j]=time[i][j-1];
-				if(works[i].deadLine>=time[i][j]) {
-					time[i][j]+=works[i].timeDuration;
-					count[i]++;
+		for(int i=1; i<=works.length; i++) {
+			time[0][i]=Integer.MAX_VALUE;
+		}
+		int max=0;
+		for(int i=1; i<=works.length;i++) {
+			for(int j=1; j<=works.length; j++) {
+				if(works[i-1].deadLine>=time[i-1][j-1] && j<=i) {
+					time[i][j]=Math.min(time[i-1][j], time[i-1][j-1]+works[i-1].timeDuration);
+					count[i-1]++;
+				}else {
+					time[i][j]=time[i-1][j];
+				}
+			}
+			max=Math.max(max, count[i-1]);
+		}
+		System.out.println(max);	
+	}
+
+	// Задача о камнях/ кучках золота для небольших весов
+	private static long solveHeapGold(int [] stones, int target) {
+		int [][] dp = new int [stones.length+1][target+1];
+		for(int i=1; i<=stones.length;i++) {
+			for(int j=0; j<=target; j++) {
+				dp[i][j]=dp[i-1][j];
+				if(j-stones[i-1]>=0 && 
+						dp[i-1][j-stones[i-1]]+stones[i-1]>dp[i][j] &&
+						dp[i-1][j-stones[i-1]]+stones[i-1]<=target) {
+					dp[i][j]=dp[i-1][j-stones[i-1]]+stones[i-1];
 				}
 			}
 		}
-		System.out.println(Arrays.toString(count));
+		System.out.println("Первая кучка " +dp[stones.length][target]);
+		printCert(stones, dp, stones.length, target);
+		return dp[stones.length][target];
 	}
-
-	// Задача о камнях/ кучках золота
-	private static void solveStones(int[] stones) {
-		long sum1=0;
-		long sum2=0;
-		List<Integer> st1 = new ArrayList<>();
-		List<Integer> st2 = new ArrayList<>();
-		Arrays.sort(stones);
-		for(int i=stones.length-1; i>=0;i--) {
-			if(sum1==sum2 || sum1<sum2) {
-				sum1+=stones[i];
-				st1.add(stones[i]);
-			}else {
-				sum2+=stones[i];
-				st2.add(stones[i]);
+	
+	private static void printCert(int [] stones, int [][] a, int i, int j) {
+		if(a[i][j]==0) {
+			return;
+		}
+		if(a[i-1][j]==a[i][j]) {
+			printCert(stones, a, i-1, j);
+		}else{
+			printCert(stones, a, i-1, j-stones[i-1]);
+			System.out.print(i+" ");
+		}
+	}
+	// решение при больших числах перебор рекурсией
+	private static void bitBruteForce(long [] stone, long sum) {
+		int n=stone.length;
+		String format="%"+n+"s";
+		long [] dp = new long[(1<<n)];
+		long minDelta = Long.MAX_VALUE;
+		int maskS1=0;
+		int idx=-1;
+		int lastLength=0;
+		for(int mask=1; mask<(1<<n); mask++) {
+			if(Integer.toBinaryString(mask).length()>lastLength) {
+				idx++;
+				lastLength=Integer.toBinaryString(mask).length();
+			}
+			int addMask = mask ^ (1<<idx);
+			dp[mask]=stone[idx]+dp[addMask];
+			if(minDelta>Math.abs(sum/2-dp[mask])) {
+				minDelta=Math.abs(sum/2-dp[mask]);
+				maskS1=mask;
 			}
 		}
-		System.out.println(st1);
-		System.out.println(st2);
-		System.out.println((int)Math.abs(sum1-sum2));
+		int maskS2=maskS1^(1<<n)-1;
+		System.out.println("Разность " +Math.abs(dp[maskS1]-dp[maskS2]));
+		System.out.println(String.format(format, Integer.toBinaryString(maskS1)).replace(' ', '0'));
+		System.out.println(String.format(format, Integer.toBinaryString(maskS2)).replace(' ', '0'));
 	}
+	
 // задача о шаблонах
 	private static void pattern (String s, String set, int index) {
 		if(index==s.length()) {
